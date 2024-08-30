@@ -5,7 +5,6 @@ import os
 import stat
 import telebot
 from telebot import types
-from telethon.sync import TelegramClient
 import base64
 import shutil
 import datetime
@@ -325,6 +324,7 @@ def bot_message(message):
                 # установим пакеты
                 script += '\nopkg install mc tor tor-geoip bind-dig cron dnsmasq-full ipset iptables obfs4 shadowsocks-libev-ss-redir shadowsocks-libev-config v2ray trojan'
                 script += '\nmkdir -p /opt/etc/unblock/'
+                script += '\nmkdir -p /tmp/tor/'
                 f = open('/opt/etc/install.sh', 'w')
                 f.write(script)
                 f.close()
@@ -591,34 +591,47 @@ ClientTransportPlugin obfs4 exec /opt/sbin/obfs4proxy managed\n' + bridges.repla
 
 
 def tor():
+    print('tor() func')
+    # Открываем исходный файл в режиме чтения
+    with open('./torrc', 'r') as src_file:
+        # Читаем содержимое файла
+        content = src_file.read()
+
+    # Открываем целевой файл в режиме записи (если файл существует, он будет перезаписан)
+    with open('/opt/etc/tor/torrc', 'w') as dest_file:
+        # Записываем содержимое в целевой файл
+        dest_file.write(content)
+
+    print("Содержимое файла успешно скопировано.")
+
     # global appapiid, appapihash
     # global localporttor, dnsporttor
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    f = open('/opt/etc/tor/torrc', 'w')
-    with TelegramClient('GetBridgesBot', appapiid, appapihash) as client:
-        client.send_message('GetBridgesBot', '/bridges')
-    with TelegramClient('GetBridgesBot', appapiid, appapihash) as client:
-        for message1 in client.iter_messages('GetBridgesBot'):
-            f.write('User root\n\
-PidFile /opt/var/run/tor.pid\n\
-ExcludeExitNodes {RU},{UA},{AM},{KG},{BY}\n\
-StrictNodes 1\n\
-TransPort 0.0.0.0:' + localporttor + '\n\
-ExitRelay 0\n\
-ExitPolicy reject *:*\n\
-ExitPolicy reject6 *:*\n\
-GeoIPFile /opt/share/tor/geoip\n\
-GeoIPv6File /opt/share/tor/geoip6\n\
-DataDirectory /opt/tmp/tor\n\
-VirtualAddrNetwork 10.254.0.0/16\n\
-DNSPort 127.0.0.1:' + dnsporttor + '\n\
-AutomapHostsOnResolve 1\n\
-UseBridges 1\n\
-ClientTransportPlugin obfs4 exec /opt/sbin/obfs4proxy managed\n'
-                    + message1.text.replace("Your bridges:\n", "").replace("obfs4", "Bridge obfs4"))
-            f.close()
-            break
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
+    # f = open('/opt/etc/tor/torrc', 'w')
+    # with TelegramClient('GetBridgesBot', appapiid, appapihash) as client:
+    #     client.send_message('GetBridgesBot', '/bridges')
+#     with TelegramClient('GetBridgesBot', appapiid, appapihash) as client:
+#         for message1 in client.iter_messages('GetBridgesBot'):
+#             f.write('User root\n\
+# PidFile /opt/var/run/tor.pid\n\
+# ExcludeExitNodes {RU},{UA},{AM},{KG},{BY}\n\
+# StrictNodes 1\n\
+# TransPort 0.0.0.0:' + localporttor + '\n\
+# ExitRelay 0\n\
+# ExitPolicy reject *:*\n\
+# ExitPolicy reject6 *:*\n\
+# GeoIPFile /opt/share/tor/geoip\n\
+# GeoIPv6File /opt/share/tor/geoip6\n\
+# DataDirectory /opt/tmp/tor\n\
+# VirtualAddrNetwork 10.254.0.0/16\n\
+# DNSPort 127.0.0.1:' + dnsporttor + '\n\
+# AutomapHostsOnResolve 1\n\
+# UseBridges 1\n\
+# ClientTransportPlugin obfs4 exec /opt/sbin/obfs4proxy managed\n'
+#                     + message1.text.replace("Your bridges:\n", "").replace("obfs4", "Bridge obfs4"))
+#             f.close()
+#             break
 
 
 # bot.polling(none_stop=True)
